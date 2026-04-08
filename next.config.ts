@@ -7,10 +7,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**", // ✅ allow ALL domains
+        hostname: "res.cloudinary.com",
       },
     ],
-  }
+  },
 };
 
 export default nextConfig;
