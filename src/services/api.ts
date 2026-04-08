@@ -12,6 +12,8 @@ export const getProducts = async (): Promise<Product[]> => {
 
 // 🔹 Add New products
 
+/// tets api 
+
 export async function addProduct(data: NewProduct) {
   const res = await fetch(`${BASE_URL}/products`, {
     method: "POST",
