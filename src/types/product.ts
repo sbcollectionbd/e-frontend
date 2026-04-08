@@ -4,6 +4,13 @@ export interface Product {
   category: string;
   subcategory?: string;
   images: string[];
-  price: number;
+  originalPrice: number;
+  discountedPrice: number;
+  discountPercentage?: number;
   stock?: number;
+  description?: string;
+  isFeatured?: boolean;
 }
+
+// For adding a product (no _id yet)
+export type NewProduct = Omit<Product, "_id" | "discountPercentage">;

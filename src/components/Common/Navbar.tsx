@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Button } from "../ui/button";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -14,18 +14,19 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/50">
-      <div className="container flex items-center justify-between h-16">
+      
+      <div className="container flex items-center justify-between h-16 px-6">
         
-        {/* Logo */}
+        {/* LEFT - Logo */}
         <Link
           href="/"
           className="font-display text-2xl font-extrabold tracking-tight text-foreground"
         >
-          FASHION<span className="gradient-text">BD</span>
+          SB COLLECTION <span className="gradient-text">BD</span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* CENTER - Men & Women */}
+        <nav className="hidden md:flex items-center gap-2">
           <Link
             href="/category/men"
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
@@ -47,10 +48,15 @@ const Navbar = () => {
           >
             Women
           </Link>
+        </nav>
 
+        {/* RIGHT - Track Order + Mobile */}
+        <div className="flex items-center gap-2">
+          
+          {/* Track Order */}
           <Link
             href="/track-order"
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+            className={`hidden md:flex px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 items-center gap-1.5 ${
               isActive("/track-order")
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -58,10 +64,8 @@ const Navbar = () => {
           >
             <MapPin className="h-3.5 w-3.5" /> Track Order
           </Link>
-        </nav>
 
-        {/* Mobile Button */}
-        <div className="flex items-center gap-2">
+          {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -77,15 +81,16 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile nav */}
+      {/* MOBILE NAV */}
       {mobileOpen && (
         <nav className="md:hidden border-t bg-background/95 backdrop-blur-xl p-4 flex flex-col gap-1">
+          
           <Link
             href="/category/men"
             onClick={() => setMobileOpen(false)}
             className="text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary px-4 py-3 rounded-xl transition-colors"
           >
-            Men's Collection
+            Men&apos;s Collection
           </Link>
 
           <Link
@@ -93,7 +98,7 @@ const Navbar = () => {
             onClick={() => setMobileOpen(false)}
             className="text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary px-4 py-3 rounded-xl transition-colors"
           >
-            Women's Collection
+            Women&apos;s Collection
           </Link>
 
           <Link

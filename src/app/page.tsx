@@ -1,23 +1,15 @@
-
-
-import CategorySection from "@/components/CategorySection";
-import FeaturedProducts from "@/components/FeaturedProducts";
-import Features from "@/components/Features";
-import Footer from "@/components/Footer";
-import HeroBanner from "@/components/HeroBanner";
-import Navbar from "@/components/Navbar";
+import CategorySection from "@/components/Home/CategorySection";
+import FeaturedProducts from "@/components/Home/FeaturedProducts";
+import Features from "@/components/Home/Features";
+import HeroBanner from "@/components/Home/HeroBanner";
 
 export default async function Home() {
-
-
   return (
-    <div>
-      <Navbar />
+    <div className="min-h-screen px-5">
       <HeroBanner />
       <Features />
       <CategorySection />
       <FeaturedProducts />
-      <Footer />
     </div>
   );
 }
