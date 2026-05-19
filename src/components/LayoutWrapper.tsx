@@ -9,15 +9,13 @@ export default function LayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  const path = usePathname();
-  const isAdmin = path.startsWith("/admin");
+  const pathname = usePathname();
+  const isAdmin = pathname.startsWith("/admin") || pathname.startsWith("/login");
 
   return (
     <>
       {!isAdmin && <Navbar />}
-
       {children}
-
       {!isAdmin && <Footer />}
     </>
   );

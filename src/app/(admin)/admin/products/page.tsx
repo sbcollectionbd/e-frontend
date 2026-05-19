@@ -22,9 +22,9 @@ export default function ProductsPage() {
   );
 
   const fetchData = async () => {
-    const data = await getProducts();
-    setProducts(data);
-  };
+  const data = await getProducts();
+  setProducts(Array.isArray(data) ? data : (data?.data ?? [])); // ✅ fixed
+};
 
   useEffect(() => {
     fetchData();
@@ -169,11 +169,11 @@ export default function ProductsPage() {
             <div className="flex gap-4 items-center">
               {item.images?.[0] ? (
                 <Image
-                  src={item.images[0] || "/placeholder.png"}
+                  src={item.images[0]}
                   alt={item.name}
                   width={56}
                   height={56}
-                  className="rounded-lg object-cover"
+                  className="rounded-lg object-cover w-14 h-14"
                 />
               ) : (
                 <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center text-xs">

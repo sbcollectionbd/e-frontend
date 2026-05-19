@@ -11,25 +11,21 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-
-
-
 export default function Dashboard() {
   const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const router = useRouter();
 
-  const [authorized, setAuthorized] = useState(false); // prevents flash
+  const [authorized, setAuthorized] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("admin");
-
     if (!isAdmin) {
       router.push("/login");
     } else {
-      setAuthorized(true); // only render dashboard if admin exists
+      setAuthorized(true);
       fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,36 +38,44 @@ export default function Dashboard() {
         fetch(`${BASE_URL}/products`),
       ]);
 
-      const ordersData = await orderRes.json();
+      const ordersRaw = await orderRes.json();
       const productsData = await productRes.json();
 
-      setOrders(ordersData);
+      // ✅ Handle both array response and wrapped { data: [] } response
+      const ordersArray = Array.isArray(ordersRaw)
+        ? ordersRaw
+        : Array.isArray(ordersRaw?.data)
+          ? ordersRaw.data
+          : [];
+
+      setOrders(ordersArray);
       setProducts(productsData);
     } catch (err) {
       console.error("Error loading dashboard:", err);
+      setOrders([]); // ✅ Ensure orders stays an array on error
     } finally {
       setLoading(false);
     }
   };
 
-  // Prevent rendering if not authorized
   if (!authorized) return null;
 
   /* ---------- Calculations ---------- */
-  const totalProducts = products?.total || 0;
+  const totalProducts = products?.total ?? products?.data?.length ?? 0;
   const totalOrders = orders.length;
 
+  // ✅ Safe reduce — orders is guaranteed to be an array now
   const revenue = orders.reduce(
-    (sum, o) => sum + (o.totalPrice + o.deliveryCharge),
+    (sum, o) => sum + ((o.totalPrice ?? 0) + (o.deliveryCharge ?? 0)),
     0,
   );
 
   const pending = orders.filter(
-    (o) => o.status.toLowerCase() === "pending",
+    (o) => o.status?.toLowerCase() === "pending",
   ).length;
 
   const delivered = orders.filter(
-    (o) => o.status.toLowerCase() === "delivered",
+    (o) => o.status?.toLowerCase() === "delivered",
   ).length;
 
   /* ---------- UI ---------- */
@@ -86,11 +90,7 @@ export default function Dashboard() {
       {/* Cards */}
       <div className="grid md:grid-cols-5 gap-6">
         <Card title="Total Products" value={totalProducts} icon={<Package />} />
-        <Card
-          title="Total Orders"
-          value={totalOrders}
-          icon={<ShoppingCart />}
-        />
+        <Card title="Total Orders" value={totalOrders} icon={<ShoppingCart />} />
         <Card title="Revenue" value={`৳${revenue}`} icon={<TrendingUp />} />
         <Card title="Pending" value={pending} icon={<Clock />} />
         <Card title="Delivered" value={delivered} icon={<CheckCircle />} />
@@ -101,12 +101,12 @@ export default function Dashboard() {
         <h2 className="text-lg font-semibold mb-4">Recent Orders</h2>
 
         {loading ? (
-          <p>Loading...</p>
+          <p className="text-gray-400">Loading...</p>
         ) : orders.length === 0 ? (
-          <p>No orders found</p>
+          <p className="text-gray-400">No orders found</p>
         ) : (
           <div className="space-y-4">
-            {orders
+            {[...orders]
               .sort(
                 (a, b) =>
                   new Date(b.createdAt).getTime() -
@@ -138,7 +138,7 @@ function Card({ title, value, icon }: any) {
 
 /* ---------- Order Item ---------- */
 function OrderItem({ order }: any) {
-  const status = order.status.toLowerCase();
+  const status = order.status?.toLowerCase() ?? "";
   const statusColor =
     status === "pending"
       ? "bg-yellow-100 text-yellow-600"
@@ -163,9 +163,8 @@ function OrderItem({ order }: any) {
         <span className={`px-3 py-1 rounded-full text-xs ${statusColor}`}>
           {order.status}
         </span>
-
         <p className="font-semibold">
-          ৳{order.totalPrice + order.deliveryCharge}
+          ৳{(order.totalPrice ?? 0) + (order.deliveryCharge ?? 0)}
         </p>
       </div>
     </div>

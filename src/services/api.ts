@@ -1,92 +1,211 @@
 import { NewProduct, Product } from "@/types/product";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
-//==================Product Section ========================///
 
-// 🔹 Get products
-export const getProducts = async (): Promise<Product[]> => {
-  const res = await fetch(`${BASE_URL}/products`);
-  const data = await res.json();
-  return data.data || data;
-};
+// ─── Shared fetch helper ────────────────────────────────────────────────────
 
-// 🔹 Add New products
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit & { next?: { revalidate?: number } } = {}
+): Promise<T> {
+  const url = `${BASE_URL}${path}`;
 
-/// tets api 
+  const res = await fetch(url, options);
 
-export async function addProduct(data: NewProduct) {
-  const res = await fetch(`${BASE_URL}/products`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  if (!res.ok) {
+    let message = `API error ${res.status}`;
+    try {
+      const err = await res.json();
+      message = err?.message || message;
+    } catch {
+      // ignore parse error
+    }
+    throw new Error(message);
+  }
 
-  if (!res.ok) throw new Error("Failed to add product");
-  return res.json() as Promise<Product>;
+  return res.json();
 }
 
-// 🔹 Get single product
-export const getSingleProduct = async (id: string): Promise<Product> => {
-  const res = await fetch(`${BASE_URL}/products/${id}`);
-  return res.json();
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+export type PaginatedProducts = {
+  total: number;
+  page: number;
+  totalPages: number;
+  data: Product[];
 };
 
-// 🔹 Get featured products
-export const getFeaturedProducts = async (): Promise<Product[]> => {
-  const res = await fetch(`${BASE_URL}/products?featured=true`);
-  const data = await res.json();
-  return data.data || data;
+export type OrderStatus = "Pending" | "Confirmed" | "Shipped" | "Delivered";
+
+export type OrderItem = {
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
 };
 
-// 🔹 Get products by category
-export const getProductsByCategory = async (category: string): Promise<Product[]> => {
-  const res = await fetch(`${BASE_URL}/products?category=${category}`);
-  const data = await res.json();
-  return data.data || data;
+export type Order = {
+  _id: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  items: OrderItem[];
+  totalPrice: number;
+  deliveryCharge: number;
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt: string;
 };
 
-// 🔹Update products details
-export const updateProduct = async (id: string, payload: Partial<Product>) => {
-  const res = await fetch(`${BASE_URL}/products/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  return res.json();
-};
-// 🔹 Delete products
-export const deleteProduct = async (id: string) => {
-  const res = await fetch(`${BASE_URL}/products/${id}`, {
-    method: "DELETE",
-  });
-
-  return res.json();
+export type CreateOrderPayload = {
+  customerName: string;
+  phone: string;
+  address: string;
+  items: OrderItem[];
+  totalPrice: number;
+  deliveryCharge: number;
 };
 
-//==================Order Section ========================///
-
-// 🔹 Create order
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const createOrder = async (order: any) => {
-  const res = await fetch(`${BASE_URL}/orders`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(order),
-  });
-
-  return res.json();
+export type GetOrdersResult = {
+  total: number;
+  page: number;
+  data: Order[];
 };
 
+// ─── Products ───────────────────────────────────────────────────────────────
 
-//==================Track Section ========================///
-
-export const trackOrdersByPhone = async (phone: string) => {
-  const res = await fetch(`${BASE_URL}/orders/track/${phone}`);
-  const data = await res.json();
+// Get all products (paginated) — cached 2 min
+export const getProducts = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedProducts> => {
+  const data = await apiFetch<PaginatedProducts>(
+    `/products?page=${page}&limit=${limit}`,
+    { next: { revalidate: 120 } }
+  );
   return data;
+};
+
+// Get featured products — cached 5 min
+export const getFeaturedProducts = async (): Promise<Product[]> => {
+  const data = await apiFetch<PaginatedProducts>("/products?featured=true", {
+    next: { revalidate: 300 },
+  });
+  return data.data ?? [];
+};
+
+// Get products by category — cached 2 min
+export const getProductsByCategory = async (
+  category: string,
+  subcategory?: string
+): Promise<Product[]> => {
+  const params = new URLSearchParams({ category });
+  if (subcategory) params.set("subcategory", subcategory);
+
+  const data = await apiFetch<PaginatedProducts>(`/products?${params}`, {
+    next: { revalidate: 120 },
+  });
+  return data.data ?? [];
+};
+
+// Search products — no cache (user input driven)
+export const searchProducts = async (
+  query: string,
+  page = 1
+): Promise<PaginatedProducts> => {
+  const params = new URLSearchParams({ search: query, page: String(page) });
+  return apiFetch<PaginatedProducts>(`/products?${params}`, {
+    cache: "no-store",
+  });
+};
+
+// Get single product — cached 5 min
+export const getSingleProduct = async (id: string): Promise<Product> => {
+  return apiFetch<Product>(`/products/${id}`, {
+    next: { revalidate: 300 },
+  });
+};
+
+// Add product — no cache (mutation)
+export const addProduct = async (payload: NewProduct): Promise<Product> => {
+  return apiFetch<Product>("/products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+};
+
+// Update product — no cache (mutation)
+export const updateProduct = async (
+  id: string,
+  payload: Partial<Product>
+): Promise<Product> => {
+  return apiFetch<Product>(`/products/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+};
+
+// Delete product — no cache (mutation)
+export const deleteProduct = async (id: string): Promise<{ message: string }> => {
+  return apiFetch<{ message: string }>(`/products/${id}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+};
+
+// ─── Orders ─────────────────────────────────────────────────────────────────
+
+// Create order — no cache (mutation)
+export const createOrder = async (
+  order: CreateOrderPayload
+): Promise<Order> => {
+  return apiFetch<Order>("/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(order),
+    cache: "no-store",
+  });
+};
+
+// Get all orders (admin) — short cache 30s
+export const getOrders = async (
+  page = 1,
+  limit = 50,
+  status?: OrderStatus
+): Promise<GetOrdersResult> => {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (status) params.set("status", status);
+
+  return apiFetch<GetOrdersResult>(`/orders?${params}`, {
+    next: { revalidate: 30 },
+  });
+};
+
+// Update order status — no cache (mutation)
+export const updateOrderStatus = async (
+  orderId: string,
+  status: OrderStatus
+): Promise<Order> => {
+  return apiFetch<Order>(`/orders/${orderId}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+    cache: "no-store",
+  });
+};
+
+// ─── Tracking ───────────────────────────────────────────────────────────────
+
+// Track orders by phone — no cache (always fresh for customer)
+export const trackOrdersByPhone = async (phone: string): Promise<Order[]> => {
+  return apiFetch<Order[]>(`/orders/track/${phone}`, {
+    cache: "no-store",
+  });
 };

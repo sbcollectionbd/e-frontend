@@ -30,7 +30,7 @@ type Product = {
 };
 
 export default function OrdersPage() {
-    const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -40,21 +40,23 @@ export default function OrdersPage() {
     // Fetch orders
     fetch(`${BASE_URL}/orders`)
       .then((res) => res.json())
-      .then(setOrders)
+      .then((data) =>
+        setOrders(Array.isArray(data) ? data : (data?.data ?? [])),
+      ) // ✅ fixed
       .catch(console.error);
 
     // Fetch products
     fetch(`${BASE_URL}/products`)
       .then((res) => res.json())
-      .then((data) => setProducts(data.data))
+      .then((data) => setProducts(Array.isArray(data.data) ? data.data : [])) // ✅ already correct, made safe
       .catch(console.error);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Get product image by productId
   const getProductImage = (productId: string) => {
     const product = products.find((p) => p._id === productId);
-    return product?.images?.[0] || "/placeholder.png";
+    return product?.images?.[0];
   };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
@@ -63,14 +65,11 @@ export default function OrdersPage() {
       const formattedStatus =
         newStatus.charAt(0).toUpperCase() + newStatus.slice(1).toLowerCase();
 
-      const res = await fetch(
-        `${BASE_URL}/orders/${orderId}/status`,
-        {
-          method: "PATCH", // <- use PATCH instead of PUT
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: formattedStatus }),
-        },
-      );
+      const res = await fetch(`${BASE_URL}/orders/${orderId}/status`, {
+        method: "PATCH", // <- use PATCH instead of PUT
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: formattedStatus }),
+      });
 
       if (!res.ok) throw new Error("Failed to update status");
 
@@ -252,9 +251,14 @@ export default function OrdersPage() {
                   <div className="flex items-center gap-3">
                     <div className="relative w-12 h-12">
                       <Image
-                        src={getProductImage(item.productId)}
+                        src={
+                          getProductImage(item.productId) || "/placeholder.jpg"
+                        }
                         alt={item.name}
                         fill
+                        sizes="(max-width: 768px) 100vw,
+         (max-width: 1200px) 50vw,
+         33vw"
                         className="rounded-lg object-cover border"
                       />
                     </div>

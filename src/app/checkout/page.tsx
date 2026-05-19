@@ -235,7 +235,7 @@ export default function CheckoutPage() {
 
           <div className="flex gap-4">
             <Image
-              src={product.images?.[0] || "/placeholder.png"}
+              src={product.images?.[0]}
               alt={product.name || "product"}
               width={80}
               height={80}
