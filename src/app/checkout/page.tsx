@@ -24,6 +24,7 @@ export default function CheckoutPage() {
     phone: "",
     address: "",
     delivery_area: "dhaka",
+     size: "",
   });
 
   // ✅ Load from localStorage
@@ -70,6 +71,7 @@ export default function CheckoutPage() {
             customerName: form.customerName,
             phone: form.phone,
             address: form.address,
+            size: form.size || null,
 
             items: [
               {
@@ -181,6 +183,12 @@ export default function CheckoutPage() {
               placeholder="Phone"
               className="w-full border p-3 rounded-xl"
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            />
+
+            <input 
+              placeholder="Size (optional)"
+              className="w-full border p-3 rounded-xl"
+              onChange={(e) => setForm({ ...form, size: e.target.value })}
             />
 
             <textarea
