@@ -16,6 +16,7 @@ type Order = {
   customerName: string;
   phone: string;
   address: string;
+  size?: string | null; // ✅ optional size
   items: OrderItem[];
   totalPrice: number;
   deliveryCharge: number;
@@ -37,23 +38,20 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
-    // Fetch orders
     fetch(`${BASE_URL}/orders`)
       .then((res) => res.json())
       .then((data) =>
-        setOrders(Array.isArray(data) ? data : (data?.data ?? [])),
-      ) // ✅ fixed
+        setOrders(Array.isArray(data) ? data : (data?.data ?? []))
+      )
       .catch(console.error);
 
-    // Fetch products
     fetch(`${BASE_URL}/products`)
       .then((res) => res.json())
-      .then((data) => setProducts(Array.isArray(data.data) ? data.data : [])) // ✅ already correct, made safe
+      .then((data) => setProducts(Array.isArray(data.data) ? data.data : []))
       .catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Get product image by productId
   const getProductImage = (productId: string) => {
     const product = products.find((p) => p._id === productId);
     return product?.images?.[0];
@@ -61,12 +59,11 @@ export default function OrdersPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      // Capitalize to match backend
       const formattedStatus =
         newStatus.charAt(0).toUpperCase() + newStatus.slice(1).toLowerCase();
 
       const res = await fetch(`${BASE_URL}/orders/${orderId}/status`, {
-        method: "PATCH", // <- use PATCH instead of PUT
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: formattedStatus }),
       });
@@ -75,14 +72,12 @@ export default function OrdersPage() {
 
       const updatedOrder: Order = await res.json();
 
-      // Update orders state
       setOrders((prev) =>
         prev.map((order) =>
-          order._id === updatedOrder._id ? updatedOrder : order,
-        ),
+          order._id === updatedOrder._id ? updatedOrder : order
+        )
       );
 
-      // Update modal if open
       if (selectedOrder?._id === updatedOrder._id) {
         setSelectedOrder(updatedOrder);
       }
@@ -93,6 +88,7 @@ export default function OrdersPage() {
       alert("Failed to update order status");
     }
   };
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -104,7 +100,7 @@ export default function OrdersPage() {
         {[...orders]
           .sort(
             (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           )
           .map((order) => (
             <div
@@ -116,6 +112,10 @@ export default function OrdersPage() {
                 <h3 className="font-semibold">{order.customerName}</h3>
                 <p className="text-sm text-gray-500">{order.phone}</p>
                 <p className="text-sm text-gray-500">{order.address}</p>
+                {/* ✅ Show size in list if present */}
+                {order.size && (
+                  <p className="text-sm text-gray-500">Size: <span className="font-medium text-gray-700">{order.size}</span></p>
+                )}
                 <p className="text-sm text-gray-400">
                   {new Date(order.createdAt).toLocaleDateString()} •{" "}
                   <span
@@ -159,7 +159,6 @@ export default function OrdersPage() {
                   <option>Delivered</option>
                 </select>
 
-                {/* Eye Button */}
                 <button
                   onClick={() => setSelectedOrder(order)}
                   className="p-2 border rounded-lg hover:bg-gray-100"
@@ -185,7 +184,7 @@ export default function OrdersPage() {
 
             <h2 className="text-xl font-semibold mb-4">Order Details</h2>
 
-            {/* Info */}
+            {/* Info Grid */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-gray-100 p-3 rounded">
                 <p className="text-sm text-gray-500">Name</p>
@@ -202,7 +201,15 @@ export default function OrdersPage() {
                 <p className="font-semibold">{selectedOrder.address}</p>
               </div>
 
-              <div className="bg-gray-100 p-3 rounded">
+              {/* ✅ Size — only shown if present */}
+              {selectedOrder.size && (
+                <div className="bg-gray-100 p-3 rounded">
+                  <p className="text-sm text-gray-500">Size</p>
+                  <p className="font-semibold">{selectedOrder.size}</p>
+                </div>
+              )}
+
+              <div className={`bg-gray-100 p-3 rounded ${selectedOrder.size ? "" : ""}`}>
                 <p className="text-sm text-gray-500">Area</p>
                 <p
                   className={`font-semibold ${
@@ -223,14 +230,14 @@ export default function OrdersPage() {
                 <p
                   className={`font-semibold px-2 py-1 rounded-full ${
                     selectedOrder.status === "Pending"
-                      ? " text-yellow-600"
+                      ? "text-yellow-600"
                       : selectedOrder.status === "Confirmed"
-                        ? " text-green-600"
+                        ? "text-green-600"
                         : selectedOrder.status === "Shipped"
-                          ? " text-orange-600"
+                          ? "text-orange-600"
                           : selectedOrder.status === "Delivered"
-                            ? " text-blue-600"
-                            : " text-gray-600"
+                            ? "text-blue-600"
+                            : "text-gray-600"
                   }`}
                 >
                   {selectedOrder.status}
@@ -256,9 +263,7 @@ export default function OrdersPage() {
                         }
                         alt={item.name}
                         fill
-                        sizes="(max-width: 768px) 100vw,
-         (max-width: 1200px) 50vw,
-         33vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="rounded-lg object-cover border"
                       />
                     </div>
@@ -268,6 +273,12 @@ export default function OrdersPage() {
                       <p className="text-xs text-gray-500">
                         Qty: {item.quantity}
                       </p>
+                      {/* ✅ Show size per item */}
+                      {selectedOrder.size && (
+                        <p className="text-xs text-gray-500">
+                          Size: {selectedOrder.size}
+                        </p>
+                      )}
                     </div>
                   </div>
 
