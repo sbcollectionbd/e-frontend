@@ -67,6 +67,7 @@ export default function TrackOrderPage() {
 
       const data = await res.json();
       setOrders(Array.isArray(data) ? data : []);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setOrders([]);
     } finally {
@@ -76,7 +77,7 @@ export default function TrackOrderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100 flex items-center justify-center px-4">
       <div className="w-full max-w-3xl">
 
         {/* HEADER */}
@@ -169,7 +170,7 @@ export default function TrackOrderPage() {
                             {/* line */}
                             {idx !== 0 && (
                               <div
-                                className={`absolute top-4 left-[-50%] w-full h-[2px] ${
+                                className={`absolute top-4 left-[-50%] w-full h-0.5 ${
                                   isActive
                                     ? "bg-orange-500"
                                     : "bg-gray-200"
@@ -199,8 +200,6 @@ export default function TrackOrderPage() {
                     <div className="border-l pl-4 space-y-4">
                       {STATUS_STEPS.slice(0, currentStep + 1).map(
                         (step, i) => {
-                          const Icon =
-                            STATUS_CONFIG[step].icon;
 
                           return (
                             <div
