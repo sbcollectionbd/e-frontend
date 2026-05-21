@@ -6,7 +6,8 @@ import { Menu, X, MapPin } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+//const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+const WHATSAPP_NUMBER = "8801335295494"; // ✅ Replace with your actual number
 
 
 
