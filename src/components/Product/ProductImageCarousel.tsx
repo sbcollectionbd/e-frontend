@@ -29,7 +29,9 @@ export default function ProductImageCarousel({ images, name }: Props) {
   useEffect(() => {
     if (!emblaApi) return;
     emblaApi.on("select", onSelect);
-    return () => { emblaApi.off("select", onSelect); };
+    return () => {
+      emblaApi.off("select", onSelect);
+    };
   }, [emblaApi, onSelect]);
 
   const displayImages = images?.length > 0 ? images : [""];
@@ -38,17 +40,14 @@ export default function ProductImageCarousel({ images, name }: Props) {
     <div className="overflow-hidden h-full w-full relative" ref={emblaRef}>
       <div className="flex h-full">
         {displayImages.map((src, index) => (
-          <div
-            key={index}
-            className="relative flex-[0_0_100%] min-w-0 h-full"
-          >
+          <div key={index} className="relative flex-[0_0_100%] min-w-0 h-full">
             <Image
               src={src}
               alt={`${name} - ${index + 1}`}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
+              quality={85} // ✅ add this line
               className="object-cover"
-              // ✅ Only load first image eagerly, rest are lazy
               priority={index === 0}
               loading={index === 0 ? "eager" : "lazy"}
             />
@@ -63,9 +62,7 @@ export default function ProductImageCarousel({ images, name }: Props) {
             <div
               key={i}
               className={`h-2 rounded-full transition-all duration-300 shadow-md border border-black/10 ${
-                i === selectedIndex
-                  ? "w-5 bg-white"
-                  : "w-2.5 bg-white/50"
+                i === selectedIndex ? "w-5 bg-white" : "w-2.5 bg-white/50"
               }`}
             />
           ))}
