@@ -1,15 +1,69 @@
+"use client";
+
 import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
+
+const images = [
+  { src: "/banner.png", alt: "Hero Banner 1" },
+  { src: "/banner2.png", alt: "Hero Banner 2" },
+  { src: "/banner3.png", alt: "Hero Banner 3" },
+];
 
 export default function HeroImage() {
-    return (
-        <div className="relative w-full h-55 sm:h-80 md:h-125 lg:h-162.5 overflow-hidden rounded-3xl">
+  const [current, setCurrent] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startInterval = () => {
+    intervalRef.current = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % images.length);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    startInterval();
+    return () => clearInterval(intervalRef.current!);
+  }, []);
+
+  const goTo = (index: number) => {
+    clearInterval(intervalRef.current!);
+    setCurrent(index);
+    startInterval(); // restart timer on manual nav
+  };
+
+  return (
+    <div className="relative w-full h-55 sm:h-80 md:h-125 lg:h-162.5 overflow-hidden rounded-3xl">
+      {/* Sliding track */}
+      <div
+        className="flex h-full transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${current * 100}%)` }}
+      >
+        {images.map((img) => (
+          <div key={img.src} className="relative min-w-full h-full flex-shrink-0">
             <Image
-                src="/banner.png"
-                alt="Hero Banner"
-                fill
-                priority
-                className="object-contain md:object-cover rounded-3xl"
+              src={img.src}
+              alt={img.alt}
+              fill
+              className="object-contain md:object-cover"
             />
-        </div>
-    );
+          </div>
+        ))}
+      </div>
+
+      {/* Dot indicators */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        {images.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goTo(index)}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              index === current
+                ? "bg-white w-6"
+                : "bg-white/50 w-2 hover:bg-white/80"
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
