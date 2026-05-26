@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 
 const images = [
-  { src: "/banner.png", alt: "Hero Banner 1" },
+  { src: "/banner1.png", alt: "Hero Banner 1" },
   { src: "/banner2.png", alt: "Hero Banner 2" },
   { src: "/banner3.png", alt: "Hero Banner 3" },
 ];
@@ -37,12 +37,17 @@ export default function HeroImage() {
         className="flex h-full transition-transform duration-700 ease-in-out"
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
-        {images.map((img) => (
-          <div key={img.src} className="relative min-w-full h-full flex-shrink-0">
+        {images.map((img, index) => (
+          <div
+            key={img.src}
+            className="relative min-w-full h-full flex-shrink-0"
+          >
             <Image
               src={img.src}
               alt={img.alt}
               fill
+              priority={index === 0} // ✅ only first image is eager
+              sizes="100vw"
               className="object-contain md:object-cover"
             />
           </div>
