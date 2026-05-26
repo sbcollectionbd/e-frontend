@@ -40,7 +40,7 @@ export default function HeroImage() {
         {images.map((img, index) => (
           <div
             key={img.src}
-            className="relative min-w-full h-full flex-shrink-0"
+            className="relative min-w-full h-full shrink-0"
           >
             <Image
               src={img.src}
